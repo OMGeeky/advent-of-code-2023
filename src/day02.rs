@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::*;
 
@@ -27,37 +27,73 @@ impl Day for Day02 {
         for line in data {
             let game = Game::from(line.clone());
             println!("{}", &game);
-            println!("{}", &line);
-            assert_eq!(line, game.to_string());
-            if game.is_possible(){
+            if game.is_possible() {
                 result += game.id;
             }
         }
         result
     }
 }
+impl DayPart2 for Day02 {
+    fn run_part2(data: Vec<Self::Input>) -> Self::Output {
+        let mut result = 0;
+        for line in data {
+            let game = Game::from(line.clone());
+            println!("{}", &game);
+            result += game.get_game_power();
+        }
+        result
+    }
 
-impl Game{
-    fn is_possible(&self)-> bool{
-        for reveals in self.reveals.iter(){
-            for reveal in reveals.iter(){
-                let max = match &reveal.color {
+    fn get_test_result_part2() -> Self::Output {
+        2286
+    }
+
+    fn get_test_data_part2() -> Vec<Self::Input> {
+        Self::get_test_data()
+    }
+}
+
+impl Game {
+    fn is_possible(&self) -> bool {
+        for reveals in self.reveals.iter() {
+            for (color, count) in reveals.iter() {
+                let max: &usize = &match &color {
                     Color::Red => 12,
                     Color::Green => 13,
                     Color::Blue => 14,
-                } ;
-                if reveal.count > max {
+                };
+                if count > max {
                     return false;
                 }
             }
         }
         true
     }
-    
+    fn get_game_power(&self) -> usize {
+        let mut min_needed: HashMap<Color, usize> = HashMap::new();
+        for reveal in &self.reveals {
+            for (color, count) in reveal {
+                let x = min_needed.get_mut(color);
+                match x {
+                    Some(previous) => {
+                        if *previous < *count {
+                            *previous = *count;
+                        }
+                    }
+                    None => {
+                        min_needed.insert(*color, *count);
+                    }
+                }
+            }
+        }
+        println!("Min power needed: {:?}", min_needed);
+        min_needed.into_values().product()
+    }
 }
 
 //region data structure
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 enum Color {
     Red,
     Green,
@@ -80,7 +116,7 @@ impl Display for Color {
 #[derive(Debug)]
 struct Game {
     id: usize,
-    reveals: Vec<Vec<Reveal>>,
+    reveals: Vec<HashMap<Color, usize>>,
 }
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -92,7 +128,11 @@ impl Display for Game {
                 .iter()
                 .map(|x| x
                     .iter()
-                    .map(|r| r.to_string())
+                    .map(|r| Reveal {
+                        color: *r.0,
+                        count: *r.1
+                    }
+                    .to_string())
                     .collect::<Vec<String>>()
                     .join(", "))
                 .collect::<Vec<String>>()
@@ -107,10 +147,17 @@ impl From<String> for Game {
             .unwrap()
             .split_once(": ")
             .unwrap();
-        let id = id.parse().unwrap();
+        let id: usize = id.parse().unwrap();
         let reveals = reveals
             .split(';')
-            .map(|x| x.split(',').map(|r| r.to_string().into()).collect())
+            .map(|x| {
+                let colors: Vec<Reveal> = x.split(',').map(|r| r.to_string().into()).collect();
+                let mut hash: HashMap<Color, usize> = HashMap::new();
+                for reveal in colors.into_iter() {
+                    hash.insert(reveal.color, reveal.count);
+                }
+                hash
+            })
             .collect();
         Self { id, reveals }
     }
@@ -118,7 +165,7 @@ impl From<String> for Game {
 
 #[derive(Debug)]
 struct Reveal {
-    count: u8,
+    count: usize,
     color: Color,
 }
 impl Display for Reveal {

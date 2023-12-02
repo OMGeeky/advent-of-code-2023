@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 pub fn read_input<T>(day: u8) -> Vec<T>
 where
     T: From<String>,
