@@ -9,9 +9,11 @@ where
     input.lines().map(|s| s.to_string().into()).collect()
 }
 mod day01;
-pub use day01::Day01;
+pub use day01::*;
 mod day02;
-pub use day02::Day02;
+pub use day02::*;
+mod day03;
+pub use day03::*;
 
 pub mod utils {
     #[macro_export]
