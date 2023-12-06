@@ -178,13 +178,13 @@ fn get_amount_from_id(id: usize, dict: &Vec<usize>) -> usize {
 fn get_for_id(id: usize, dict: &Vec<usize>, layer: usize) -> usize {
     let own_amount = dict[id];
     if own_amount == 0 {
-        p!(layer, "- {id} no subs");
+        // p!(layer, "- {id} no subs");
         return 1;
     }
     let first = id + 1;
     let last = id + own_amount;
     let others = get_for_range(first, last, dict, layer);
-    p!(layer, "- {id} subs: {}", others);
+    // p!(layer, "- {id} subs: {}", others);
     return others + 1;
 }
 
