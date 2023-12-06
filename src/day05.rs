@@ -53,21 +53,7 @@ impl Day for Day05 {
         let mut data = data.lines().map(|x| x.trim());
         let target_seeds = data.next().unwrap();
         println!("targets: {}", target_seeds);
-        let mut dict = HashMap::new();
-
-        for (is_map, lines) in &data
-            // .inspect(|x| println!("{}", x))
-            .group_by(|x| x.len() > 0)
-        {
-            if !is_map {
-                continue;
-            }
-            let lines = lines.collect::<Vec<_>>();
-            dbg!(&lines);
-            let map = Map::from_vec(lines);
-            dbg!(&map);
-            dict.insert(map.from, map);
-        }
+        let dict = parse_to_maps(data);
         let result = target_seeds
             .trim()
             .strip_prefix("seeds: ")
@@ -84,6 +70,22 @@ impl Day for Day05 {
 
         result
     }
+}
+
+fn parse_to_maps<'a>(data: impl Iterator<Item = &'a str>) -> HashMap<Kind, Map> {
+    let mut dict = HashMap::new();
+
+    for (_, lines) in (&data.group_by(|x| x.len() > 0))
+        .into_iter()
+        .filter(|(x, _)| *x)
+    {
+        let lines = lines.collect::<Vec<_>>();
+        dbg!(&lines);
+        let map = Map::from_vec(lines);
+        dbg!(&map);
+        dict.insert(map.from, map);
+    }
+    dict
 }
 
 fn map_seed_to_position(var_name: usize, dict: &HashMap<Kind, Map>) -> usize {
