@@ -14,6 +14,8 @@ mod day02;
 pub use day02::*;
 mod day03;
 pub use day03::*;
+mod day04;
+pub use day04::*;
 
 pub mod utils {
     #[macro_export]
