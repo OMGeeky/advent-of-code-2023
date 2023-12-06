@@ -8,24 +8,23 @@ impl Day for Day02 {
     type Input = String;
     type Output = usize;
 
-    fn get_test_data() -> Vec<Self::Input> {
-        vec![
-            "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green".to_string(),
-            "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue".to_string(),
-            "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red".to_string(),
-            "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red".to_string(),
-            "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green".to_string(),
-        ]
+    fn get_test_data() -> Self::Input {
+        "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
+            .to_string()
     }
 
     fn get_test_result() -> Self::Output {
         8
     }
 
-    fn run(data: Vec<Self::Input>) -> Self::Output {
+    fn run(data: Self::Input) -> Self::Output {
         let mut result = 0;
-        for line in data {
-            let game = Game::from(line.clone());
+        for line in data.lines().map(|x| x.trim().to_string()) {
+            let game = Game::from(line);
             println!("{}", &game);
             if game.is_possible() {
                 result += game.id;
@@ -35,9 +34,9 @@ impl Day for Day02 {
     }
 }
 impl DayPart2 for Day02 {
-    fn run_part2(data: Vec<Self::Input>) -> Self::Output {
+    fn run_part2(data: Self::Input) -> Self::Output {
         let mut result = 0;
-        for line in data {
+        for line in data.lines().map(|x| x.trim().to_string()) {
             let game = Game::from(line.clone());
             println!("{}", &game);
             result += game.get_game_power();
@@ -49,7 +48,7 @@ impl DayPart2 for Day02 {
         2286
     }
 
-    fn get_test_data_part2() -> Vec<Self::Input> {
+    fn get_test_data_part2() -> Self::Input {
         Self::get_test_data()
     }
 }

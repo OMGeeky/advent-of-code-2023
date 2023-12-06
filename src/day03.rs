@@ -6,26 +6,26 @@ impl Day for Day03 {
     type Input = String;
     type Output = i32;
 
-    fn get_test_data() -> Vec<Self::Input> {
-        vec![
-            "467..114..".to_string(),
-            "...*......".to_string(),
-            "..35..633.".to_string(),
-            "......#...".to_string(),
-            "617*......".to_string(),
-            ".....+.58.".to_string(),
-            "..592.....".to_string(),
-            "......755.".to_string(),
-            "...$.*....".to_string(),
-            ".664.598..".to_string(),
-        ]
+    fn get_test_data() -> Self::Input {
+ 
+"467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..".to_string()
     }
 
     fn get_test_result() -> Self::Output {
         4361
     }
 
-    fn run(data: Vec<Self::Input>) -> Self::Output {
+    fn run(data: Self::Input) -> Self::Output {
+        let data = data.lines().map(|x|x.to_string()).collect::<Vec<_>>();
         let mut result = 0;
         dbg!(&data);
         for y in 0..data.len() {

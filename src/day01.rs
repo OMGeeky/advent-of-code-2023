@@ -8,22 +8,21 @@ impl Day for Day01 {
 
     type Output = usize;
 
-    fn get_test_data() -> Vec<Self::Input> {
-        vec![
-            "1abc2".to_string(),
-            "pqr3stu8vwx".to_string(),
-            "a1b2c3d4e5f".to_string(),
-            "treb7uchet".to_string(),
-        ]
+    fn get_test_data() -> Self::Input {
+        "1abc2
+         pqr3stu8vwx
+         a1b2c3d4e5f
+         treb7uchet"
+            .to_string()
     }
 
     fn get_test_result() -> Self::Output {
         142
     }
 
-    fn run(data: Vec<Self::Input>) -> Self::Output {
+    fn run(data: Self::Input) -> Self::Output {
         let mut sum = 0;
-        for line in data {
+        for line in data.lines().map(|x| x.trim().to_string()) {
             let mut digits = line.chars().filter(|c| c.is_digit(10));
             let first = digits.next().unwrap_or(' ');
             let last = digits.last().unwrap_or(first);
@@ -45,24 +44,23 @@ impl Day for Day01 {
     }
 }
 impl DayPart2 for Day01 {
-    fn get_test_data_part2() -> Vec<String> {
-        vec![
-            "two1nine".to_string(),
-            "eightwothree".to_string(),
-            "abcone2threexyz".to_string(),
-            "xtwone3four".to_string(),
-            "4nineeightseven2".to_string(),
-            "zoneight234".to_string(),
-            "7pqrstsixteen".to_string(),
-        ]
+    fn get_test_data_part2() -> String {
+        "two1nine
+            eightwothree
+            abcone2threexyz
+            xtwone3four
+            4nineeightseven2
+            zoneight234
+            7pqrstsixteen"
+            .to_string()
     }
     fn get_test_result_part2() -> usize {
         281
     }
 
-    fn run_part2(data: Vec<String>) -> usize {
+    fn run_part2(data: String) -> usize {
         let mut sum = 0;
-        for line in data {
+        for line in data.lines().map(|x| x.trim()) {
             let mut l = String::new();
             for i in 0..line.len() {
                 let part = &line[i..];

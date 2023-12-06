@@ -1,4 +1,4 @@
-pub fn read_input<T>(day: u8) -> Vec<T>
+pub fn read_input<T>(day: u8) -> T
 where
     T: From<String>,
 {
@@ -6,7 +6,7 @@ where
     println!("Reading input from {}", filename);
     let input = std::fs::read_to_string(filename).unwrap();
     utils::day!();
-    input.lines().map(|s| s.to_string().into()).collect()
+    input.into()
 }
 mod day01;
 pub use day01::*;
@@ -82,14 +82,14 @@ where
     type Input;
     type Output;
 
-    fn get_test_data() -> Vec<Self::Input>;
+    fn get_test_data() -> Self::Input;
     fn get_test_result() -> Self::Output;
-    fn run(data: Vec<Self::Input>) -> Self::Output;
+    fn run(data: Self::Input) -> Self::Output;
 }
 pub trait DayPart2: Day {
-    fn run_part2(data: Vec<Self::Input>) -> Self::Output;
+    fn run_part2(data: Self::Input) -> Self::Output;
     fn get_test_result_part2() -> Self::Output;
-    fn get_test_data_part2() -> Vec<Self::Input>;
+    fn get_test_data_part2() -> Self::Input;
 }
 pub trait DayConvenience: Day {
     fn run_day_test() {
