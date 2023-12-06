@@ -12,3 +12,4 @@ serde_json = "1.0.68"
 
 paste ={ version = "1.0" }
 cached="0.46"
+itertools="0.12"
