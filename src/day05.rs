@@ -4,7 +4,7 @@ use crate::*;
 
 pub struct Day05;
 impl Day for Day05 {
-    const DAY_NUM: u8 = 05;
+    const DAY_NUM: u8 = 5;
     type Input = String;
     type Output = usize;
 
@@ -77,6 +77,12 @@ impl DayPart2 for Day05 {
         let target_seeds = data.next().unwrap();
         println!("targets: {}", target_seeds);
         let dict = parse_to_maps(data);
+        let dict = Map::combine_maps(dict);
+        let dict = {
+            let mut m = HashMap::new();
+            m.insert(Kind::Seed, dict);
+            m
+        };
         let result = target_seeds
             .trim()
             .strip_prefix("seeds: ")
@@ -93,12 +99,11 @@ impl DayPart2 for Day05 {
                 println!("that is {} of positions to check", end-start);
                 println!("=======================================================================================================");
                 let min = (start..end)
-                    .into_iter()
                     .map(|seed_pos| {
                         // println!("Starting to map Seed pos to location: {}", seed_pos);
                         let target = map_seed_to_position(seed_pos, &dict);
                         // println!("Got pos from seed: {}=>{}", seed_pos, target);
-                        // dbg!(target);
+                        dbg!(target);
                         target
                     })
                     .min()
@@ -123,12 +128,14 @@ impl DayPart2 for Day05 {
 fn parse_to_maps<'a>(data: impl Iterator<Item = &'a str>) -> HashMap<Kind, Map> {
     let mut dict = HashMap::new();
 
-    for (_, lines) in (&data.group_by(|x| x.len() > 0))
-        .into_iter()
-        .filter(|(x, _)| *x)
+    for (x, lines) in (&data.group_by(|x| x.len() > 0)).into_iter()
+    //.filter(|(x, _)| *x)
     {
         let lines = lines.collect::<Vec<_>>();
-        dbg!(&lines);
+        dbg!(&x, &lines);
+        if !x {
+            continue;
+        }
         let map = Map::from_vec(lines);
         dbg!(&map);
         dict.insert(map.from, map);
@@ -154,11 +161,13 @@ fn map_seed_to_position(var_name: usize, dict: &HashMap<Kind, Map>) -> usize {
 use data::*;
 use itertools::Itertools;
 mod data {
+    use std::collections::HashMap;
+
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Map {
         pub from: Kind,
         pub to: Kind,
-        ranges: Vec<Range>,
+        pub ranges: Vec<Range>,
     }
 
     impl Map {
@@ -171,7 +180,98 @@ mod data {
                     return target;
                 }
             }
-            return source;
+            source
+        }
+        pub fn combine_maps(maps: HashMap<Kind, Map>) -> Map {
+            let mut maps = maps;
+            dbg!("combining following maps to a single one: ", &maps);
+            let mut current: Map = maps.remove(&Kind::Seed).unwrap();
+            let mut kind = current.to;
+            while kind != Kind::Location {
+                dbg!("current kind:", &kind);
+                let to = maps.get(&kind).unwrap();
+                current = Map::combine_two_maps(&current, to);
+                kind = current.to;
+            }
+            current
+        }
+        pub fn combine_two_maps(from: &Map, to: &Map) -> Map {
+            dbg!("combining these two maps to one:", from, to);
+            let from_kind = from.from;
+            let to_kind = to.to;
+            let mut ranges = Vec::<Range>::new();
+            'from_ranges: for range in &from.ranges {
+                let mut map_start = range.destination_start;
+                let mut map_end = range.length + map_start - 1;
+                let mut map_length = range.length;
+
+                'to_ranges: for to_range in &to.ranges {
+                    let to_source_start = to_range.source_start;
+                    let to_source_len = to_range.length;
+                    let to_range_end = to_source_start + to_source_len - 1;
+                    let to_source_end = map_start + map_length;
+                    if to_source_start <= map_start {
+                        let offset_from_this_range = map_start - to_source_start;
+                        if to_range_end < to_source_end {
+                            dbg!(
+                                "from range fits fully into target range",
+                                offset_from_this_range
+                            );
+                            let new_range = Range {
+                                destination_start: to_range.destination_start
+                                    + offset_from_this_range,
+                                source_start: range.source_start,
+                                length: map_length,
+                            };
+                            ranges.push(new_range);
+                            continue 'from_ranges;
+                        } else if to_range_end < map_start {
+                            dbg!("from range is not inside this range at all");
+
+                            continue 'to_ranges;
+                        } else {
+                            dbg!("from range fits partially into this range");
+
+                            let length = 0;
+                            let new_range = Range {
+                                destination_start: to_range.destination_start
+                                    + offset_from_this_range,
+                                source_start: range.source_start,
+                                length,
+                            };
+                            map_start += offset_from_this_range;
+                            map_length -= length;
+                            ranges.push(new_range);
+                            dbg!("There was a range that could not completely be mapped, so only the start got mapped...", &range, &to_range);
+                            continue 'to_ranges;
+                        }
+                    } else if to_range.source_start <= map_end {
+                        dbg!("from range fits partially into this range");
+
+                        let offset = map_end - to_range.source_start;
+                        let new_range = Range {
+                            destination_start: to_range.destination_start + offset,
+                            source_start: to_range.source_start,
+                            length: offset,
+                        };
+                        ranges.push(new_range);
+                        dbg!("There was a range that could not completely be mapped, so only the end got mapped...", &range, &to_range);
+                    }
+                }
+            }
+            let map = Self {
+                from: from_kind,
+                to: to_kind,
+                ranges,
+            };
+            dbg!(
+                "combined two maps into one:",
+                from,
+                to,
+                "were combined into: ",
+                &map
+            );
+            map
         }
     }
     impl<T> From<T> for Map
@@ -180,6 +280,7 @@ mod data {
     {
         fn from(value: T) -> Self {
             let value = value.as_ref();
+            dbg!(&value);
             let mut values = value.trim().lines();
             let mut map_name = values
                 .next()
@@ -224,9 +325,9 @@ mod data {
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Range {
-        destination_start: usize,
-        source_start: usize,
-        length: usize,
+        pub destination_start: usize,
+        pub source_start: usize,
+        pub length: usize,
     }
     impl Range {
         fn get_mapped(&self, source: usize) -> Option<usize> {
@@ -260,27 +361,26 @@ mod my_tests {
     use test::Bencher;
     fn get_sample_map() -> HashMap<Kind, Map> {
         let data: String = Day05::get_test_data();
+        dbg!("Test data:", &data);
         let mut data = data.lines().map(|x| x.trim());
         let target_seeds = data.next().unwrap();
-        println!("targets: {}", target_seeds);
-        let dict = parse_to_maps(data);
-        dict
+        dbg!("targets: {}", target_seeds);
+        parse_to_maps(data)
     }
     fn get_sample_map_real() -> HashMap<Kind, Map> {
-        let data: String = read_input(05);
+        let data: String = read_input(5);
         let mut data = data.lines().map(|x| x.trim());
         let target_seeds = data.next().unwrap();
         println!("targets: {}", target_seeds);
-        let dict = parse_to_maps(data);
-        dict
+        parse_to_maps(data)
     }
     #[bench]
     fn bench_mapping(b: &mut Bencher) {
         let mapper = get_sample_map();
         b.iter(|| {
-            (0..10000)
-                .into_iter()
-                .for_each(|x| {map_seed_to_position(x, &mapper);})
+            (0..10000).for_each(|x| {
+                map_seed_to_position(x, &mapper);
+            })
         })
     }
     #[bench]
@@ -306,10 +406,107 @@ mod my_tests {
     }
     #[bench]
     fn bench_parsing2_real(b: &mut Bencher) {
-        let data: String = read_input(05);
+        let data: String = read_input(5);
         let mut data = data.lines().map(|x| x.trim());
         let target_seeds = data.next().unwrap();
         println!("targets: {}", target_seeds);
         b.iter(|| parse_to_maps(data.clone()))
+    }
+    #[test]
+    fn test_parsing_combined() {
+        let maps = get_sample_map();
+        let map = Map::combine_maps(maps);
+        dbg!(map);
+        assert!(false);
+    }
+
+    #[test]
+    fn test_parsing_combined2() {
+        let maps = {
+            let mut d = HashMap::new();
+            d.insert(
+                Kind::Seed,
+                Map {
+                    from: Kind::Seed,
+                    to: Kind::Light,
+                    ranges: vec![
+                        Range {
+                            source_start: 10,
+                            destination_start: 50,
+                            length: 5,
+                        },
+                        Range {
+                            source_start: 60,
+                            destination_start: 20,
+                            length: 5,
+                        },
+                    ],
+                },
+            );
+            d.insert(
+                Kind::Light,
+                Map {
+                    from: Kind::Light,
+                    to: Kind::Location,
+                    ranges: vec![
+                        Range {
+                            source_start: 50,
+                            destination_start: 150,
+                            length: 5,
+                        },
+                        Range {
+                            source_start: 20,
+                            destination_start: 210,
+                            length: 5,
+                        },
+                    ],
+                },
+            );
+            d
+        };
+        let expected = Map {
+            from: Kind::Seed,
+            to: Kind::Location,
+            ranges: vec![
+                Range {
+                    source_start: 10,
+                    destination_start: 150,
+                    length: 5,
+                },
+                Range {
+                    source_start: 60,
+                    destination_start: 210,
+                    length: 5,
+                },
+            ],
+        };
+        let map = Map::combine_maps(maps);
+        dbg!("result of the combining: ", &map);
+
+        assert_eq!(map, expected);
+        panic!("i want to see the results");
+    }
+
+    #[test]
+    fn test_parsing_combined3() {
+        let maps = get_sample_map();
+
+        let map = Map::combine_maps(maps.clone());
+        dbg!("result of the combining: ", &map);
+        (0..1000).for_each(|x| {
+            let normal = map_seed_to_position(x, &maps);
+            let combined = map.get_mapped(x);
+            assert_eq!(normal, combined);
+        });
+    }
+
+    #[bench]
+    fn bench_parsing_combined(b: &mut Bencher) {
+        b.iter(|| {
+            let maps = get_sample_map();
+            let map = Map::combine_maps(maps);
+
+            dbg!(map);
+        })
     }
 }
