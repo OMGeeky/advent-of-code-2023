@@ -252,3 +252,64 @@ mod data {
         }
     }
 }
+
+#[cfg(test)]
+mod my_tests {
+    use super::*;
+    extern crate test;
+    use test::Bencher;
+    fn get_sample_map() -> HashMap<Kind, Map> {
+        let data: String = Day05::get_test_data();
+        let mut data = data.lines().map(|x| x.trim());
+        let target_seeds = data.next().unwrap();
+        println!("targets: {}", target_seeds);
+        let dict = parse_to_maps(data);
+        dict
+    }
+    fn get_sample_map_real() -> HashMap<Kind, Map> {
+        let data: String = read_input(05);
+        let mut data = data.lines().map(|x| x.trim());
+        let target_seeds = data.next().unwrap();
+        println!("targets: {}", target_seeds);
+        let dict = parse_to_maps(data);
+        dict
+    }
+    #[bench]
+    fn bench_mapping(b: &mut Bencher) {
+        let mapper = get_sample_map();
+        b.iter(|| {
+            (0..10000)
+                .into_iter()
+                .for_each(|x| {map_seed_to_position(x, &mapper);})
+        })
+    }
+    #[bench]
+    fn bench_mapping2(b: &mut Bencher) {
+        let mapper = get_sample_map();
+        b.iter(|| map_seed_to_position(5, &mapper))
+    }
+    #[bench]
+    fn bench_parsing(b: &mut Bencher) {
+        b.iter(get_sample_map)
+    }
+    #[bench]
+    fn bench_parsing2(b: &mut Bencher) {
+        let data: String = Day05::get_test_data();
+        let mut data = data.lines().map(|x| x.trim());
+        let target_seeds = data.next().unwrap();
+        println!("targets: {}", target_seeds);
+        b.iter(|| parse_to_maps(data.clone()))
+    }
+    #[bench]
+    fn bench_parsing_real(b: &mut Bencher) {
+        b.iter(get_sample_map_real)
+    }
+    #[bench]
+    fn bench_parsing2_real(b: &mut Bencher) {
+        let data: String = read_input(05);
+        let mut data = data.lines().map(|x| x.trim());
+        let target_seeds = data.next().unwrap();
+        println!("targets: {}", target_seeds);
+        b.iter(|| parse_to_maps(data.clone()))
+    }
+}

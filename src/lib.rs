@@ -1,3 +1,5 @@
+#![feature(test)]
+
 pub fn read_input<T>(day: u8) -> T
 where
     T: From<String>,
