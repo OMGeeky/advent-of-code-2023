@@ -71,7 +71,55 @@ impl Day for Day05 {
         result
     }
 }
+impl DayPart2 for Day05 {
+    fn run_part2(data: Self::Input) -> Self::Output {
+        let mut data = data.lines().map(|x| x.trim());
+        let target_seeds = data.next().unwrap();
+        println!("targets: {}", target_seeds);
+        let dict = parse_to_maps(data);
+        let result = target_seeds
+            .trim()
+            .strip_prefix("seeds: ")
+            .unwrap()
+            .split(' ')
+            .chunks(2)
+            .into_iter()
+            .map(|mut seed_pos| {
+                let start = seed_pos.next().unwrap().parse().unwrap();
+                let end: usize = seed_pos.next().unwrap().parse().unwrap();
+                let end = start + end;
+                println!("targets: {}", target_seeds);
+                println!("getting seed positions for range: {}..{}", start, end);
+                println!("that is {} of positions to check", end-start);
+                println!("=======================================================================================================");
+                let min = (start..end)
+                    .into_iter()
+                    .map(|seed_pos| {
+                        // println!("Starting to map Seed pos to location: {}", seed_pos);
+                        let target = map_seed_to_position(seed_pos, &dict);
+                        // println!("Got pos from seed: {}=>{}", seed_pos, target);
+                        // dbg!(target);
+                        target
+                    })
+                    .min()
+                    .unwrap();
+                println!("=======================================================================================================");
+                min
+            })
+            .min()
+            .unwrap();
 
+        result
+    }
+
+    fn get_test_result_part2() -> Self::Output {
+        46
+    }
+
+    fn get_test_data_part2() -> Self::Input {
+        Self::get_test_data()
+    }
+}
 fn parse_to_maps<'a>(data: impl Iterator<Item = &'a str>) -> HashMap<Kind, Map> {
     let mut dict = HashMap::new();
 
@@ -93,20 +141,19 @@ fn map_seed_to_position(var_name: usize, dict: &HashMap<Kind, Map>) -> usize {
     let mut source = var_name;
     while kind != Kind::Location {
         let map = dict.get(&kind).unwrap();
-        println!("Mapping {:?} to {:?}", kind, map.to);
+        // println!("Mapping {:?} to {:?}", kind, map.to);
         kind = map.to;
         let get_mapped = map.get_mapped(source);
-        println!("Mapping {:?} to {:?}", source, get_mapped);
+        // println!("Mapping {:?} to {:?}", source, get_mapped);
         source = get_mapped;
     }
-    println!("destination: {source}");
+    // println!("destination: {source}");
     source
 }
 
 use data::*;
 use itertools::Itertools;
 mod data {
-    use super::*;
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Map {
         pub from: Kind,

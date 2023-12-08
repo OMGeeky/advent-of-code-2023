@@ -1,5 +1,5 @@
 use std::ops::RangeInclusive;
-use std::{ops::Range, usize};
+use std::usize;
 
 use cached::proc_macro::cached;
 use cached::SizedCache;
