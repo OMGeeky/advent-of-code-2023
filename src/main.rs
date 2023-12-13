@@ -7,7 +7,9 @@ fn main() {
     // Day03::part1();
     // Day04::run_all();
     // Day05::run_all();
-    Day06::run_all();
+    //Day06::run_all();
+    //Day07::run_all();
+    Day07::part1();
 
     // utils::run!(01);
     // utils::run!(02);
