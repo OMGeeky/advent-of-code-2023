@@ -6,7 +6,7 @@ impl Day for Dayxx {
     type Input = String;
     type Output = usize;
 
-    fn get_test_data() -> Vec<Self::Input> {
+    fn get_test_data() -> Self::Input {
         todo!()
     }
 
@@ -14,7 +14,7 @@ impl Day for Dayxx {
         todo!()
     }
 
-    fn run(data: Vec<Self::Input>) -> Self::Output {
+    fn run(data: Self::Input) -> Self::Output {
         todo!()
     }
 }
