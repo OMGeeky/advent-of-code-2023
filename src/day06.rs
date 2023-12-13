@@ -25,10 +25,24 @@ Distance:  9  40  200"
             .product()
     }
 }
+impl DayPart2 for Day06 {
+    fn run_part2(data: Self::Input) -> Self::Output {
+        data.race_part2.get_amount_of_winning_accelarations()
+    }
+
+    fn get_test_result_part2() -> Self::Output {
+        71503
+    }
+
+    fn get_test_data_part2() -> Self::Input {
+        Self::get_test_data()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Scoreboard {
     races: Vec<Race>,
+    race_part2: Race,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Race {
@@ -44,7 +58,7 @@ impl Race {
         let mut result = 0;
         for i in 0..self.duration {
             let time_left = self.duration - i;
-            if i * time_left > self.distance{
+            if i * time_left > self.distance {
                 result += 1;
             }
         }
@@ -55,22 +69,24 @@ impl Race {
 impl From<String> for Scoreboard {
     fn from(value: String) -> Self {
         let mut lines = value.lines();
-        let durations = lines
+        let duration = lines
             .next()
             .unwrap()
             .trim()
             .strip_prefix("Time:")
             .unwrap()
-            .trim()
-            .split_ascii_whitespace();
-        let distances = lines
+            .trim();
+        let durations = duration.split_ascii_whitespace();
+
+        let distance = lines
             .next()
             .unwrap()
             .trim()
             .strip_prefix("Distance:")
             .unwrap()
-            .trim()
-            .split_ascii_whitespace();
+            .trim();
+        let distances = distance.split_ascii_whitespace();
+
         let mut races = vec![];
         for (duration, distance) in durations.zip(distances) {
             let duration: u64 = duration.parse().unwrap();
@@ -78,6 +94,12 @@ impl From<String> for Scoreboard {
             races.push(Race { duration, distance });
         }
 
-        Self { races }
+        let duration = duration.replace(' ', "");
+        let distance = distance.replace(' ', "");
+        let duration: u64 = duration.parse().unwrap();
+        let distance: u64 = distance.parse().unwrap();
+        let race_part2 = Race { duration, distance };
+
+        Self { races, race_part2 }
     }
 }
