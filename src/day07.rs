@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::{cmp::Ordering, collections::HashMap, usize};
 
 use itertools::Itertools;
 
@@ -46,6 +46,74 @@ QQQJA 483"
             .sum()
     }
 }
+
+impl DayPart2 for Day07{
+    fn run_part2(data: Self::Input) -> Self::Output {
+        //TODO: does not handle case right: J345A should just be OnePair since J can only mimic one card not multiple
+        let mut ranks = data.hands;
+        ranks.sort_by(|s, o|{
+            let cmp = s.combo_part2.cmp(&o.combo_part2);
+            match cmp {
+                std::cmp::Ordering::Less => Ordering::Less,
+                std::cmp::Ordering::Equal => {
+                    for (own, other) in s.cards_part2.iter().zip(o.cards_part2.iter()) {
+                        match own.cmp(other) {
+                            Ordering::Equal => {}
+                            _ => return own.cmp(other),
+                        }
+                    }
+                    dbg!("The cards were the same", s);
+                    Ordering::Equal
+                }
+                std::cmp::Ordering::Greater => Ordering::Greater,
+            }
+        });
+        let ranks: Vec<(usize, Hand)> = ranks.into_iter().enumerate().collect();
+        ranks
+            .iter()
+            .map(|(r, h)|(r+1, h))
+            .inspect(|(r, hand)| {
+                println!(
+                    "{:>4}*{:>3}=>{:>7} \t{:?} \t{:?}",
+                    r ,
+                    hand.bid,
+                    r * hand.bid,
+                    hand.combo_part2,
+                    hand.cards_part2
+                )
+            })
+            .map(|(r, h)| r * h.bid)
+            .sum()
+    }
+
+    fn get_test_data_part2() -> Self::Input {
+        "2345A 1
+Q2KJJ 13
+Q2Q2Q 19
+T3T3J 17
+T3Q33 11
+2345J 3
+J345A 2
+32T3K 5
+T55J5 29
+KK677 7
+KTJJT 34
+QQQJA 31
+JJJJJ 37
+JAAAA 43
+AAAAJ 59
+AAAAA 61
+2AAAA 23
+2JJJJ 53
+JJJJ2 41".to_string().into()
+    }
+    fn get_test_result_part2() -> Self::Output {
+        6839
+    }
+}
+
+
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash)]
 pub struct Game {
     hands: Vec<Hand>,
@@ -58,11 +126,14 @@ impl From<String> for Game {
     }
 }
 pub type HandOfCards = [Card; 5];
+pub type HandOfCardsPart2 = [CardPart2; 5];
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, Hash)]
 pub struct Hand {
     bid: usize,
     cards: HandOfCards,
+    cards_part2: HandOfCardsPart2,
     combo: ComboType,
+    combo_part2: ComboType,
 }
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -105,17 +176,25 @@ impl PartialOrd for Hand {
 
 impl<'a> From<&'a str> for Hand {
     fn from(value: &'a str) -> Self {
-        let (cards, bid) = value.split_once(' ').unwrap();
+        let (s, bid) = value.split_once(' ').unwrap();
 
-        let cards = cards
+        let cards = s
             .chars()
             .map_into()
             .collect::<Vec<Card>>()
             .try_into()
             .unwrap();
+        let cards_part2 = s
+            .chars()
+            .map_into()
+            .collect::<Vec<CardPart2>>()
+            .try_into()
+            .unwrap();
         let bid = bid.trim().parse().unwrap();
         let combo = ComboType::from(&cards);
-        Hand { bid, cards, combo }
+        let combo_part2 = ComboType::from_part2(&cards_part2);
+
+        Hand { bid, cards, combo, cards_part2, combo_part2 }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -133,6 +212,60 @@ pub enum Card {
     Q,
     K,
     A,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CardPart2 {
+    J,
+    _2,
+    _3,
+    _4,
+    _5,
+    _6,
+    _7,
+    _8,
+    _9,
+    T,
+    Q,
+    K,
+    A,
+}
+impl From<Card> for CardPart2{
+    fn from(value: Card) -> Self {
+        match value {
+            Card::_2 =>CardPart2::_2,
+            Card::_3 =>CardPart2::_3,
+            Card::_4 =>CardPart2::_4,
+            Card::_5 =>CardPart2::_5,
+            Card::_6 =>CardPart2::_6,
+            Card::_7 =>CardPart2::_7,
+            Card::_8 =>CardPart2::_8,
+            Card::_9 =>CardPart2::_9,
+            Card::T =>CardPart2::T,
+            Card::J =>CardPart2::J,
+            Card::Q =>CardPart2::Q,
+            Card::K =>CardPart2::K,
+            Card::A =>CardPart2::A,
+        }
+    }
+}
+impl Into<Card> for CardPart2{
+    fn into(self) -> Card {
+        match self {
+            CardPart2::_2 =>Card::_2,
+            CardPart2::_3 =>Card::_3,
+            CardPart2::_4 =>Card::_4,
+            CardPart2::_5 =>Card::_5,
+            CardPart2::_6 =>Card::_6,
+            CardPart2::_7 =>Card::_7,
+            CardPart2::_8 =>Card::_8,
+            CardPart2::_9 =>Card::_9,
+            CardPart2::T =>Card::T,
+            CardPart2::J =>Card::J,
+            CardPart2::Q =>Card::Q,
+            CardPart2::K =>Card::K,
+            CardPart2::A =>Card::A,
+        }
+    }
 }
 impl From<char> for Card {
     fn from(value: char) -> Self {
@@ -154,6 +287,26 @@ impl From<char> for Card {
         }
     }
 }
+impl From<char> for CardPart2 {
+    fn from(value: char) -> Self {
+        match value {
+            'A' => CardPart2::A,
+            'K' => CardPart2::K,
+            'J' => CardPart2::J,
+            'Q' => CardPart2::Q,
+            'T' => CardPart2::T,
+            '2' => CardPart2::_2,
+            '3' => CardPart2::_3,
+            '4' => CardPart2::_4,
+            '5' => CardPart2::_5,
+            '6' => CardPart2::_6,
+            '7' => CardPart2::_7,
+            '8' => CardPart2::_8,
+            '9' => CardPart2::_9,
+            other => panic!("Invalid card: {other}"),
+        }
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ComboType {
     HighCard,
@@ -164,12 +317,44 @@ pub enum ComboType {
     FourOfAKind,
     FiveOfAKind,
 }
-impl<'a> From<&'a HandOfCards> for ComboType {
-    fn from(value: &'a HandOfCards) -> Self {
+impl ComboType {
+    fn from(value: &HandOfCards) -> Self {
         let value = value.to_vec();
         let mut counter = CardCounter::new();
         for c in value {
             counter.increment(c);
+        }
+        let five = counter.get_by_amount(5);
+        let four = counter.get_by_amount(4);
+        let three = counter.get_by_amount(3);
+        let two = counter.get_by_amount(2);
+        if !five.is_empty() {
+            return ComboType::FiveOfAKind;
+        }
+        if !four.is_empty() {
+            return ComboType::FourOfAKind;
+        }
+        if !three.is_empty() {
+            if !two.is_empty() {
+                return ComboType::FullHouse;
+            } else {
+                return ComboType::ThreeOfAKind;
+            }
+        }
+        if !two.is_empty() {
+            if two.len() >= 2 {
+                return ComboType::TwoPair;
+            } else {
+                return ComboType::OnePair;
+            }
+        }
+        return ComboType::HighCard;
+    }
+    fn from_part2(value: &HandOfCardsPart2) -> Self {
+        let value = value.to_vec();
+        let mut counter = CardCounter::new();
+        for c in value {
+            counter.increment_part2(c.into());
         }
         let five = counter.get_by_amount(5);
         let four = counter.get_by_amount(4);
@@ -222,6 +407,19 @@ impl CardCounter {
     }
 
     fn increment(&mut self, c: Card) {
+        if let Some(v) = self._values.get_mut(&c) {
+            *v += 1;
+        } else {
+            self._values.insert(c, 1);
+        }
+    }
+    fn increment_part2(&mut self, c: Card) {
+        if c == Card::J{
+            for value in self._values.values_mut(){
+                *value += 1;
+            }
+            return;
+        }
         if let Some(v) = self._values.get_mut(&c) {
             *v += 1;
         } else {
