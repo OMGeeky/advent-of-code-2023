@@ -25,6 +25,9 @@ pub use day06::*;
 mod day07;
 pub use day07::*;
 
+mod day19;
+pub use day19::*;
+
 pub mod utils {
     #[macro_export]
     macro_rules! day {
