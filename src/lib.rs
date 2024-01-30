@@ -1,4 +1,5 @@
 #![feature(test)]
+#![feature(iter_map_windows)]
 
 pub fn read_input<T>(day: u8) -> T
 where
@@ -24,6 +25,9 @@ mod day06;
 pub use day06::*;
 mod day07;
 pub use day07::*;
+
+mod day09;
+pub use day09::*;
 
 mod day19;
 pub use day19::*;
