@@ -99,42 +99,62 @@ where
 
     fn get_test_data() -> Self::Input;
     fn get_test_result() -> Self::Output;
+    fn get_multiple_test_data() ->  Box<impl Iterator<Item=Self::Input>>{
+        Box::new([Self::get_test_data()].into_iter())
+    }
+    fn get_multiple_test_result() -> Box<impl Iterator<Item=Self::Output>>{
+        Box::new([Self::get_test_result()].into_iter())
+    }
     fn run(data: Self::Input) -> Self::Output;
 }
 pub trait DayPart2: Day {
     fn run_part2(data: Self::Input) -> Self::Output;
     fn get_test_result_part2() -> Self::Output;
     fn get_test_data_part2() -> Self::Input;
+    fn get_multiple_test_data_part2() ->  Box<impl Iterator<Item=Self::Input>>{
+        Box::new([Self::get_test_data_part2()].into_iter())
+    }
+    fn get_multiple_test_result_part2() -> Box<impl Iterator<Item=Self::Output>>{
+        Box::new([Self::get_test_result_part2()].into_iter())
+    }
 }
 pub trait DayConvenience: Day {
-    fn run_day_test() {
-        let test_res = Self::run(Self::get_test_data());
-        println!("Day {}: {:?}", Self::DAY_NUM, test_res);
-        assert_eq!(Self::get_test_result(), test_res);
+    fn run_day_tests(){
+        let test_inputs = Self::get_multiple_test_data();
+        let expected_results = Self::get_multiple_test_result();
+        (test_inputs).zip(expected_results).enumerate().for_each(|(i,(input, expected))|{
+            let test_res = Self::run(input);
+            println!("Day {} test {i}: {:?}", Self::DAY_NUM, test_res);
+            assert_eq!(expected, test_res);
+        })
     }
     fn run_day() {
         let test_res = Self::run(read_input(Self::DAY_NUM));
         println!("Day {} result: \n{:?}", Self::DAY_NUM, test_res);
     }
     fn part1() {
-        Self::run_day_test();
+        Self::run_day_tests();
         Self::run_day();
     }
 }
 impl<T> DayConvenience for T where T: Day {}
 
 pub trait DayPart2Convenience: DayPart2 + DayConvenience {
-    fn run_day_part2_test() {
-        let test_res = Self::run_part2(Self::get_test_data_part2());
-        println!("Day {} part 2: {:?}", Self::DAY_NUM, test_res);
-        assert_eq!(Self::get_test_result_part2(), test_res);
+    fn run_day_part2_tests(){
+        let test_inputs = Self::get_multiple_test_data_part2();
+        let expected_results = Self::get_multiple_test_result();
+        (test_inputs).zip(expected_results).enumerate().for_each(|(i,(input, expected))|{
+            let test_res = Self::run(input);
+            println!("Day {} test {i}: {:?}", Self::DAY_NUM, test_res);
+            assert_eq!(expected, test_res);
+        })
     }
     fn run_day_part2() {
         let test_res = Self::run_part2(read_input(Self::DAY_NUM));
         println!("Day {} part 2 result: \n{:?}", Self::DAY_NUM, test_res);
     }
     fn part2(){
-        Self::run_day_part2_test();
+        Self::run_day_part2_tests();
         Self::run_day_part2();
     }
     fn run_all() {
