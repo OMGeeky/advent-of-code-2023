@@ -32,6 +32,9 @@ pub use day09::*;
 mod day10;
 pub use day10::*;
 
+mod day14;
+pub use day14::*;
+
 mod day19;
 pub use day19::*;
 
@@ -145,10 +148,10 @@ impl<T> DayConvenience for T where T: Day {}
 pub trait DayPart2Convenience: DayPart2 + DayConvenience {
     fn run_day_part2_tests(){
         let test_inputs = Self::get_multiple_test_data_part2();
-        let expected_results = Self::get_multiple_test_result();
+        let expected_results = Self::get_multiple_test_result_part2();
         (test_inputs).zip(expected_results).enumerate().for_each(|(i,(input, expected))|{
-            let test_res = Self::run(input);
-            println!("Day {} test {i}: {:?}", Self::DAY_NUM, test_res);
+            let test_res = Self::run_part2(input);
+            println!("Day {} part 2 test {i}: {:?}", Self::DAY_NUM, test_res);
             assert_eq!(expected, test_res);
         })
     }
