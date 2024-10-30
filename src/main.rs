@@ -14,7 +14,8 @@ fn main() {
     // Day10::part1();
     // Day10::part2();
     // Day10::run_all();
-    Day14::run_all();
+    // Day14::run_all();   
+    Day15::part1();
     // Day14::part1();
     // Day14::part2();
     //Day19::run_all();

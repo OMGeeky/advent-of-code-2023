@@ -1,5 +1,6 @@
 #![feature(test)]
 #![feature(iter_map_windows)]
+#![feature(ascii_char, ascii_char_variants)]
 
 pub fn read_input<T>(day: u8) -> T
 where
@@ -34,6 +35,9 @@ pub use day10::*;
 
 mod day14;
 pub use day14::*;
+
+mod day15;
+pub use day15::*;
 
 mod day19;
 pub use day19::*;
