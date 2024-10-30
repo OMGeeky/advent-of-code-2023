@@ -39,98 +39,161 @@ impl Day for Day16 {
         let length = lines.first().expect("Need at least one line").len();
         let height = lines.len();
 
-        let mut grid = Grid::new(length, height);
-
-        let mut rays: VecDeque<Ray> = VecDeque::new();
-        rays.push_back(Ray {
+        let starting_ray = Ray {
             pos: (0, 0),
             direction: Direction::Right,
-        });
-        let mut last_was_energized = false;
-        while rays.len() > 0 {
-            // println!("");
-            // dbg!(&rays);
-            let ray = &mut rays[0];
-            if !grid.is_in_bounds(ray.pos) {
-                // println!("Ray is out of bounds: {ray:?}");
+        };
+        check_heat(length, height, starting_ray, lines)
+    }
+}
+impl DayPart2 for Day16 {
+    fn run_part2(data: Self::Input) -> Self::Output {
+        let lines = data
+            .lines()
+            .map(str::chars)
+            .map(Itertools::collect_vec)
+            .collect_vec();
+        let length = lines.first().expect("Need at least one line").len();
+        let height = lines.len();
+
+        let mut max = 0;
+        for y in 0..height {
+            let starting_ray = Ray {
+                pos: (0, y as isize),
+                direction: Direction::Right,
+            };
+            let x = check_heat(length, height, starting_ray, lines.clone());
+            if max < x {
+                max = x;
+            }
+            let starting_ray = Ray {
+                pos: ((length - 1) as isize, y as isize),
+                direction: Direction::Left,
+            };
+            let x = check_heat(length, height, starting_ray, lines.clone());
+            if max < x {
+                max = x;
+            }
+        }
+        for x in 0..length {
+            let starting_ray = Ray {
+                pos: (x as isize, 0),
+                direction: Direction::Down,
+            };
+            let x = check_heat(length, height, starting_ray, lines.clone());
+            if max < x {
+                max = x;
+            }
+            let starting_ray = Ray {
+                pos: (x as isize, (height - 1) as isize),
+                direction: Direction::Up,
+            };
+            let x = check_heat(length, height, starting_ray, lines.clone());
+            if max < x {
+                max = x;
+            }
+        }
+        max
+    }
+
+    fn get_test_result_part2() -> Self::Output {
+        51
+    }
+
+    fn get_test_data_part2() -> Self::Input {
+        Self::get_test_data()
+    }
+}
+
+fn check_heat(length: usize, height: usize, starting_ray: Ray, lines: Vec<Vec<char>>) -> usize {
+    let mut grid = Grid::new(length, height);
+    let mut rays: VecDeque<Ray> = VecDeque::new();
+    rays.push_back(starting_ray);
+
+    let mut last_was_energized = false;
+    while rays.len() > 0 {
+        // println!("");
+        // dbg!(&rays);
+        let ray = &mut rays[0];
+        if !grid.is_in_bounds(ray.pos) {
+            // println!("Ray is out of bounds: {ray:?}");
+            rays.pop_front();
+            continue;
+        }
+        let c = lines[ray.pos.1 as usize][ray.pos.0 as usize];
+        grid.set_highlight(ray.pos);
+        // println!("{ray:?}");
+        // println!(
+        //     "Char: '{c}' line: '{}'",
+        //     lines[ray.pos.1 as usize]
+        //         .iter()
+        //         .map(|x| x.to_string())
+        //         .join("")
+        // );
+        // println!("{grid}");
+        if grid.has_been_enerigzed_from_this_dir(ray.pos, ray.direction) {
+            if last_was_energized {
+                last_was_energized = false;
+                // println!("Already been here");
                 rays.pop_front();
                 continue;
+            } else {
+                last_was_energized = true;
             }
-            let c = lines[ray.pos.1 as usize][ray.pos.0 as usize];
-            grid.set_highlight(ray.pos);
-            // println!("{ray:?}");
-            // println!(
-            //     "Char: '{c}' line: '{}'",
-            //     lines[ray.pos.1 as usize]
-            //         .iter()
-            //         .map(|x| x.to_string())
-            //         .join("")
-            // );
-            // println!("{grid}");
-            if grid.has_been_enerigzed_from_this_dir(ray.pos, ray.direction) {
-                if last_was_energized {
-                    last_was_energized = false;
-                    // println!("Already been here");
-                    rays.pop_front();
-                    continue;
-                } else {
-                    last_was_energized = true;
-                }
-            }
-            grid.set_energized(ray.pos, ray.direction);
-            match c {
-                '.' => (),
-                '\\' => match ray.direction {
-                    Direction::Up => ray.direction = Direction::Left,
-                    Direction::Down => ray.direction = Direction::Right,
-                    Direction::Left => ray.direction = Direction::Up,
-                    Direction::Right => ray.direction = Direction::Down,
-                },
-                '/' => match ray.direction {
-                    Direction::Up => ray.direction = Direction::Right,
-                    Direction::Down => ray.direction = Direction::Left,
-                    Direction::Left => ray.direction = Direction::Down,
-                    Direction::Right => ray.direction = Direction::Up,
-                },
-                '-' => match ray.direction {
-                    Direction::Up | Direction::Down => {
-                        ray.direction = Direction::Left;
-                        let mut second_ray = Ray {
-                            direction: Direction::Right,
-                            pos: ray.pos,
-                        };
-                        tick_ray(ray);
-                        tick_ray(&mut second_ray);
-                        rays.push_back(second_ray);
-                        continue;
-                    }
-                    Direction::Left | Direction::Right => {}
-                },
-                '|' => match ray.direction {
-                    Direction::Left | Direction::Right => {
-                        ray.direction = Direction::Up;
-                        let mut second_ray = Ray {
-                            direction: Direction::Down,
-                            pos: ray.pos,
-                        };
-                        tick_ray(ray);
-                        tick_ray(&mut second_ray);
-
-                        rays.push_back(second_ray);
-                        continue;
-                    }
-                    Direction::Up | Direction::Down => {}
-                },
-                other => println!("Invalid char: '{}'", other),
-            }
-            tick_ray(ray);
         }
-        grid.reset_highlight();
-        println!("DONE");
-        println!("{grid}");
+        grid.set_energized(ray.pos, ray.direction);
+        match c {
+            '.' => (),
+            '\\' => match ray.direction {
+                Direction::Up => ray.direction = Direction::Left,
+                Direction::Down => ray.direction = Direction::Right,
+                Direction::Left => ray.direction = Direction::Up,
+                Direction::Right => ray.direction = Direction::Down,
+            },
+            '/' => match ray.direction {
+                Direction::Up => ray.direction = Direction::Right,
+                Direction::Down => ray.direction = Direction::Left,
+                Direction::Left => ray.direction = Direction::Down,
+                Direction::Right => ray.direction = Direction::Up,
+            },
+            '-' => match ray.direction {
+                Direction::Up | Direction::Down => {
+                    ray.direction = Direction::Left;
+                    let mut second_ray = Ray {
+                        direction: Direction::Right,
+                        pos: ray.pos,
+                    };
+                    tick_ray(ray);
+                    tick_ray(&mut second_ray);
+                    rays.push_back(second_ray);
+                    continue;
+                }
+                Direction::Left | Direction::Right => {}
+            },
+            '|' => match ray.direction {
+                Direction::Left | Direction::Right => {
+                    ray.direction = Direction::Up;
+                    let mut second_ray = Ray {
+                        direction: Direction::Down,
+                        pos: ray.pos,
+                    };
+                    tick_ray(ray);
+                    tick_ray(&mut second_ray);
 
-        grid.get_heat()
+                    rays.push_back(second_ray);
+                    continue;
+                }
+                Direction::Up | Direction::Down => {}
+            },
+            other => println!("Invalid char: '{}'", other),
+        }
+        tick_ray(ray);
     }
+    grid.reset_highlight();
+    // println!("DONE");
+    // println!("{grid}");
+
+    grid.get_heat()
 }
 
 fn tick_ray(ray: &mut Ray) {
